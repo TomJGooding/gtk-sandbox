@@ -1,11 +1,26 @@
 #include <gtk/gtk.h>
 
+static void on_startup(GtkApplication *app, gpointer user_data) {
+    // Add custom CSS for taller progress bars
+    GdkDisplay *display = gdk_display_get_default();
+    GtkCssProvider *provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_string(
+        provider, "progressbar > trough, progress { min-height: 1em; }"
+    );
+    gtk_style_context_add_provider_for_display(
+        display,
+        GTK_STYLE_PROVIDER(provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
+}
+
 static void on_activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window;
     GtkWidget *box;
     GtkWidget *label;
     GtkWidget *grid;
     GtkWidget *button;
+    GtkWidget *progress_bar;
 
     window = gtk_application_window_new(app);
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
@@ -62,6 +77,14 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_add_css_class(button, "circular");
     gtk_grid_attach(GTK_GRID(grid), button, 3, 0, 1, 1);
 
+    //////////////////////////////////////////
+    // Example custom styled progress bars (see startup handler above)
+    progress_bar = gtk_progress_bar_new();
+    gtk_box_append(GTK_BOX(box), progress_bar);
+
+    progress_bar = gtk_progress_bar_new();
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), 0.5);
+    gtk_box_append(GTK_BOX(box), progress_bar);
 
     gtk_window_present(GTK_WINDOW(window));
 }
@@ -70,6 +93,7 @@ int main(int argc, char *argv[]) {
     GtkApplication *app = gtk_application_new(
         "com.github.TomJGooding.css-examples", G_APPLICATION_DEFAULT_FLAGS
     );
+    g_signal_connect(app, "startup", G_CALLBACK(on_startup), NULL);
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
 
     int status = g_application_run(G_APPLICATION(app), argc, argv);
